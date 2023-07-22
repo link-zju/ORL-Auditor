@@ -10,11 +10,7 @@ For ease of understanding, we divide the workflow into two phases, i.e., prepara
 
 **2. Change the random seed if you need to run one script many times; otherwise, you will get the same model or results.**
 
-### Phase 1: Preparation
-
-Table II of the paper illustrates the detailed process and random seed settings.
-
-#### Step 0: Make the file directory
+### Create the file directory
 
 We should first create a directory for saving the models and datasets. In the following, we use the `Lunar Lander` task as an example to show the directory.
 
@@ -43,6 +39,17 @@ ORL_Auditor_proj
 ```
 
 **The `main.py` is the entrance of all experiments.**
+
+### Phase 1: Preparation
+
+Table II of the paper illustrates the detailed process and random seed settings. **Please note that you need to configure the dependencies with a dockerfile before starting the experiments.**
+
+```/bin/bash
+cd $PROJECT_SAVE_PATH
+docker build -t Orl-Auditor:latest .  ## build the docker image
+docker run -it --gpus all  -v $PROJECT_SAVE_PATH:/workspace/off-rl  -d  ORL-Auditor:latest   /bin/bash   ## start a container
+source activate   ## activate the virtualenv (venv)
+```
 
 #### Step 1: Train online RL models
 
