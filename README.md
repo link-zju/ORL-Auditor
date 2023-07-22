@@ -42,7 +42,7 @@ ORL_Auditor_proj
 
 ### Phase 1: Preparation
 
-Please note that we need to configure the dependencies with the Dockerfile before starting the experiments.
+Firstly, we need to configure the dependencies with the Dockerfile before starting the experiments.
 
 ```/bin/bash
 cd $PROJECT_SAVE_PATH
