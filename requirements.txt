@@ -1,0 +1,12 @@
+ale_py==0.7.4
+d3rlpy==1.1.1
+gym==0.21.0
+matplotlib==3.5.2
+numpy==1.22.3
+pandas==1.4.3
+scikit_learn==1.1.1
+scipy==1.8.1
+stable_baselines3==1.6.2
+torch==1.12.1+cu113
+torchvision==0.13.1
+Box2D==2.3.10
