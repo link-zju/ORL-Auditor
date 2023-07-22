@@ -42,7 +42,7 @@ ORL_Auditor_proj
 
 ### Phase 1: Preparation
 
-Table II of the paper illustrates the detailed process and random seed settings. **Please note that you need to configure the dependencies with a dockerfile before starting the experiments.**
+Please note that we need to configure the dependencies with the Dockerfile before starting the experiments.
 
 ```/bin/bash
 cd $PROJECT_SAVE_PATH
@@ -50,6 +50,9 @@ docker build -t Orl-Auditor:latest .  ## build the docker image
 docker run -it --gpus all  -v $PROJECT_SAVE_PATH:/workspace/off-rl  -d  ORL-Auditor:latest   /bin/bash   ## start a container
 source activate   ## activate the virtualenv (venv)
 ```
+
+Then, we can advance to the following steps.
+Table II of the paper illustrates the detailed process and the random seed settings.
 
 #### Step 1: Train online RL models
 
