@@ -42,12 +42,12 @@ ORL_Auditor_proj
 
 ### Phase 1: Preparation
 
-Firstly, we need to configure the dependencies with the Dockerfile before starting the experiments.
+Firstly, we need to configure the dependencies with the `Dockerfile` before starting the experiments.
 
 ```/bin/bash
 cd $PROJECT_SAVE_PATH
 docker build -t Orl-Auditor:latest .  ## build the docker image
-docker run -it --gpus all  -v $PROJECT_SAVE_PATH:/workspace/off-rl  -d  ORL-Auditor:latest   /bin/bash   ## start a container
+docker run -it --gpus all  -v $PROJECT_SAVE_PATH:/workspace/off-rl  -d  orl-auditor:latest   /bin/bash   ## start a container
 source activate   ## activate the virtualenv (venv)
 ```
 
