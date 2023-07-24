@@ -46,7 +46,7 @@ Firstly, we need to configure the dependencies with the `Dockerfile` before star
 
 ```/bin/bash
 cd $PROJECT_SAVE_PATH
-docker build -t Orl-Auditor:latest .  ## build the docker image
+docker build -t orl-auditor:latest .  ## build the docker image
 docker run -it --gpus all  -v $PROJECT_SAVE_PATH:/workspace/off-rl  -d  orl-auditor:latest   /bin/bash   ## start a container
 source activate   ## activate the virtualenv (venv)
 ```
