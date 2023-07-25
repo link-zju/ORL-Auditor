@@ -476,20 +476,21 @@ class MyAuditor():
             states_and_actions = np.load(data_to_evaluate, allow_pickle=True)
 
         observation_action_size = states_and_actions.shape[-1]
-        if 'rluply_d4rl_halfcheetah' in critic_model_path:
-            n_hidden = 1024
-        elif 'sac_lunarlander' in critic_model_path:
-            n_hidden = 128
-
-        elif 'sac_ant-v2' in critic_model_path:
-            n_hidden = 1024
-            
-        elif 'sac_bipedalwalker' in critic_model_path:
-            n_hidden = 1024
-            
-        else: print('Error n_hidden of critic_model')
         
-        critic_model = CriticModelWithoutLastActivation(observation_action_size, n_hidden=n_hidden, n_output=1).to(device)
+        # if 'rluply_d4rl_halfcheetah' in critic_model_path:
+        #     n_hidden = 1024
+        # elif 'sac_lunarlander' in critic_model_path:
+        #     n_hidden = 128
+
+        # elif 'sac_ant-v2' in critic_model_path:
+        #     n_hidden = 1024
+            
+        # elif 'sac_bipedalwalker' in critic_model_path:
+        #     n_hidden = 1024
+            
+        # else: print('Error n_hidden of critic_model')
+        
+        critic_model = CriticModelWithoutLastActivation(observation_action_size, n_hidden=1024, n_output=1).to(device)
         critic_model.load_state_dict(torch.load(critic_model_path, map_location=device)['model_state_dict'])
         critic_model.eval()
         
@@ -517,7 +518,8 @@ class MyAuditor():
         critic_model_name = os.path.join(critic_model_path, self.critic_model_tag)
 
         observation_action_size = int((teacher_buffer_in_transition_form.shape[-1] - 1) / 2)
-        critic_model = CriticModelWithoutLastActivation(observation_action_size, n_hidden=128, n_output=1).to(self.device)
+        
+        critic_model = CriticModelWithoutLastActivation(observation_action_size, n_hidden=1024, n_output=1).to(self.device)
         critic_model.load_state_dict(torch.load(critic_model_name)['model_state_dict'])
         critic_model.eval()
         
