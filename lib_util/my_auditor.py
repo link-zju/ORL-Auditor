@@ -555,10 +555,7 @@ class MyAuditor():
             shadow_value_deviation_abs_sum_l2_list = []
             
             shadow_model_cos_distance_list = []
-            shadow_model_cos_distance_weighted_list = []
-            
             shadow_model_wasserstein_distance_list = []
-            shadow_model_our_weighted_cosine_list = []
             
             model_list = []
             for shadow_student in shadow_student_list:
@@ -578,10 +575,8 @@ class MyAuditor():
                 for drl_shadow in model_list:
 
                     shadow_actions = drl_shadow.predict(obs_data)
-                    
                     shadow_actions = shadow_actions if len(shadow_actions.shape)>1 else np.expand_dims(shadow_actions, axis=1)
 
-                
                     data_to_evaluate = np.concatenate((obs_data, shadow_actions), axis=1)
                     shadow_student_value = MyAuditor.value_estimation(data_to_evaluate, critic_model_path, device)
                     shadow_student_value_list.append(copy.deepcopy(shadow_student_value.reshape(-1, 1)))
@@ -590,14 +585,10 @@ class MyAuditor():
                 shadow_student_value_mean = np.mean(shadow_student_value_stack, axis=1)
                 shadow_student_value_std = np.std(shadow_student_value_stack, axis=1)
                 
-                shadow_student_value_mean_vertical = np.mean(shadow_student_value_stack, axis=0)
-                shadow_student_value_std_vertical = np.std(shadow_student_value_stack, axis=0)
                 
                 shadow_student_value_mean_list.append(shadow_student_value_mean)
                 shadow_student_value_std_list.append(shadow_student_value_std)
-                
-                shadow_student_value_mean_vertical_list.append(shadow_student_value_mean_vertical)
-                shadow_student_value_std_vertical_list.append(shadow_student_value_std_vertical)
+
             
                 # the deviation between the mean value and the each shadow models' value
                 shadow_student_value_mean = np.mean(shadow_student_value_stack, axis=1, keepdims=True)
@@ -611,28 +602,20 @@ class MyAuditor():
                 
                 ## cos-similarity
                 cosine_value_list = []
-                normal_weighted_cosine_value_list = []
                 wasserstein_distance_list = []
-                our_weighted_cosine_value_list = []
                 
                 for i in range(shadow_student_value_stack.shape[1]):
                     cosine_value_list.append(cosine(shadow_student_value_stack[:, i].squeeze(), shadow_student_value_mean.squeeze()))
-                    normal_weighted_cosine_value_list.append(cosine(shadow_student_value_stack[:, i].squeeze(), shadow_student_value_mean.squeeze(), np.abs(shadow_student_value_stack[:, i].squeeze() - shadow_student_value_mean.squeeze())))
                     wasserstein_distance_list.append(wasserstein_distance(shadow_student_value_stack[:, i].squeeze(), shadow_student_value_mean.squeeze()))
-                    our_weighted_cosine_value_list.append(np.sum(np.abs(shadow_student_value_stack[:, i].squeeze() - shadow_student_value_mean.squeeze()) * shadow_student_value_stack[:, i].squeeze() * shadow_student_value_mean.squeeze())) 
                     
                 cosine_value_arr = np.array(cosine_value_list)
-                normal_weighted_cosine_value_arr = np.array(normal_weighted_cosine_value_list)
                 wasserstein_distance_arr = np.array(wasserstein_distance_list)
-                our_weighted_cosine_value_arr = np.array(our_weighted_cosine_value_list)
                 
                 shadow_model_cos_distance_list.append(cosine_value_arr)
-                shadow_model_cos_distance_weighted_list.append(normal_weighted_cosine_value_arr)
                 shadow_model_wasserstein_distance_list.append(wasserstein_distance_arr)
-                shadow_model_our_weighted_cosine_list.append(our_weighted_cosine_value_arr)
                                 
             
-            return shadow_student_value_mean_list, shadow_student_value_std_list, shadow_student_value_mean_vertical_list, shadow_student_value_std_vertical_list, shadow_value_deviation_abs_sum_l1_list, shadow_value_deviation_abs_sum_l2_list, shadow_model_cos_distance_list, shadow_model_cos_distance_weighted_list, shadow_model_wasserstein_distance_list, shadow_model_our_weighted_cosine_list
+            return shadow_student_value_mean_list, shadow_value_deviation_abs_sum_l1_list, shadow_value_deviation_abs_sum_l2_list, shadow_model_cos_distance_list, shadow_model_wasserstein_distance_list
         
         
         
@@ -660,7 +643,9 @@ class MyAuditor():
                 shadow_student_list.append(teacher_of_student)
                 teacher_of_student_list.remove(teacher_of_student)
         
-        shadow_student_value_mean_list, shadow_student_value_std_list, shadow_student_value_mean_vertical_list, shadow_student_value_std_vertical_list, shadow_value_deviation_abs_sum_l1_list, shadow_value_deviation_abs_sum_l2_list, shadow_model_cos_distance_list, shadow_model_cos_distance_weighted_list, shadow_model_wasserstein_distance_list, shadow_model_our_weighted_cosine_list = feature_generator(shadow_student_list, critic_model_path, audit_mdpdataset, num_of_audited_episode)
+        # shadow_student_value_mean_list, shadow_student_value_std_list, shadow_student_value_mean_vertical_list, shadow_student_value_std_vertical_list, shadow_value_deviation_abs_sum_l1_list, shadow_value_deviation_abs_sum_l2_list, shadow_model_cos_distance_list, shadow_model_cos_distance_weighted_list, shadow_model_wasserstein_distance_list, shadow_model_our_weighted_cosine_list = feature_generator(shadow_student_list, critic_model_path, audit_mdpdataset, num_of_audited_episode)
+        
+        shadow_student_value_mean_list, shadow_value_deviation_abs_sum_l1_list, shadow_value_deviation_abs_sum_l2_list, shadow_model_cos_distance_list, shadow_model_wasserstein_distance_list = feature_generator(shadow_student_list, critic_model_path, audit_mdpdataset, num_of_audited_episode)
         
         
         # data_record
@@ -1579,7 +1564,7 @@ class MyAuditor():
                     if 0 == used_metric_index:
                         all_results['results_between_each_two_datasets']['actual_buffer_name: {}-audit_buffer_name: {}'.format(actual_buffer_name.split('_')[3], audit_buffer_name.split('_')[3])] = {}
                     
-                    all_results['results_between_each_two_datasets']['actual_buffer_name: {}-audit_buffer_name: {}'.format(actual_buffer_name.split('_')[3], audit_buffer_name.split('_')[3])][f'{used_metric}'] = {'Accuracy': acc_result, 'Number of suspect model': df_load_copy.shape[0]}
+                    all_results['results_between_each_two_datasets']['actual_buffer_name: {}-audit_buffer_name: {}'.format(actual_buffer_name.split('_')[3], audit_buffer_name.split('_')[3])][f'{used_metric}'] = {'Accuracy': acc_result, 'Number of trajectories from the suspect model': df_load_copy.shape[0]}
                     
                     if actual_buffer_name == audit_buffer_name:
                         temp_true_positive_models += acc_number

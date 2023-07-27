@@ -161,5 +161,5 @@ cython_debug/
 
 
 # the generated datasets and trained models
-# datasets_and_models_set1/
+datasets_and_models_set1/
 *DS_Store
