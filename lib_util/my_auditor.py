@@ -1067,53 +1067,25 @@ class MyAuditor():
                 
                 ## 202301231250 cos-similarity
                 cosine_value_list = []
-                normal_weighted_cosine_value_list = []
+                # normal_weighted_cosine_value_list = []
                 wasserstein_distance_list = []
-                our_weighted_cosine_value_list = []
+                # our_weighted_cosine_value_list = []
                 
                 for i in range(shadow_student_value_stack.shape[1]):
                     cosine_value_list.append(cosine(shadow_student_value_stack[:, i].squeeze(), shadow_student_value_mean.squeeze()))
-                    normal_weighted_cosine_value_list.append(cosine(shadow_student_value_stack[:, i].squeeze(), shadow_student_value_mean.squeeze(), np.abs(shadow_student_value_stack[:, i].squeeze() - shadow_student_value_mean.squeeze())))
+                    # normal_weighted_cosine_value_list.append(cosine(shadow_student_value_stack[:, i].squeeze(), shadow_student_value_mean.squeeze(), np.abs(shadow_student_value_stack[:, i].squeeze() - shadow_student_value_mean.squeeze())))
                     wasserstein_distance_list.append(wasserstein_distance(shadow_student_value_stack[:, i].squeeze(), shadow_student_value_mean.squeeze()))
-                    our_weighted_cosine_value_list.append(np.sum(np.abs(shadow_student_value_stack[:, i].squeeze() - shadow_student_value_mean.squeeze()) * shadow_student_value_stack[:, i].squeeze() * shadow_student_value_mean.squeeze())) 
+                    # our_weighted_cosine_value_list.append(np.sum(np.abs(shadow_student_value_stack[:, i].squeeze() - shadow_student_value_mean.squeeze()) * shadow_student_value_stack[:, i].squeeze() * shadow_student_value_mean.squeeze())) 
                     
                 cosine_value_arr = np.array(cosine_value_list)
-                normal_weighted_cosine_value_arr = np.array(normal_weighted_cosine_value_list)
+                # normal_weighted_cosine_value_arr = np.array(normal_weighted_cosine_value_list)
                 wasserstein_distance_arr = np.array(wasserstein_distance_list)
-                our_weighted_cosine_value_arr = np.array(our_weighted_cosine_value_list)
+                # our_weighted_cosine_value_arr = np.array(our_weighted_cosine_value_list)
                 
                 shadow_model_cos_distance_list.append(cosine_value_arr)
-                shadow_model_cos_distance_weighted_list.append(normal_weighted_cosine_value_arr)
+                # shadow_model_cos_distance_weighted_list.append(normal_weighted_cosine_value_arr)
                 shadow_model_wasserstein_distance_list.append(wasserstein_distance_arr)
-                shadow_model_our_weighted_cosine_list.append(our_weighted_cosine_value_arr)
-                
-                # cosine_value_list = []
-                # normal_weighted_cosine_value_list = []
-                # wasserstein_distance_list = []
-                # our_weighted_cosine_value_list = []
-                                
-                
-                # ## 20230124 wasserstein distance
-                # shadow_model_wasserstein_distance_list
-                
-                # cosine_value_list = []
-                # for i in range(shadow_student_value_stack.shape[1]):
-                #     # import pdb;pdb.set_trace()
-                #     cosine_value_list.append(np.sum(np.abs(shadow_student_value_stack[:, i].squeeze() - shadow_student_value_mean.squeeze()) * shadow_student_value_stack[:, i].squeeze() * shadow_student_value_mean.squeeze())) 
-                        
-                # cosine_value_arr_weighted = np.array(cosine_value_list)
-                # shadow_model_cos_distance_weighted_list.append(cosine_value_arr_weighted)
-                
-                
-                
-                # ## 202301231552 weighted cos-similarity
-                # cosine_value_list = []
-                # for i in range(shadow_student_value_stack.shape[1]):
-                #     # import pdb;pdb.set_trace()
-                #     cosine_value_list.append(np.sum(np.abs(shadow_student_value_stack[:, i].squeeze() - shadow_student_value_mean.squeeze()) * shadow_student_value_stack[:, i].squeeze() * shadow_student_value_mean.squeeze())) 
-                        
-                # cosine_value_arr_weighted = np.array(cosine_value_list)
-                # shadow_model_cos_distance_weighted_list.append(cosine_value_arr_weighted)
+                # shadow_model_our_weighted_cosine_list.append(our_weighted_cosine_value_arr)
                 
             
             return shadow_student_value_mean_list, shadow_student_value_std_list, shadow_student_value_max_list, shadow_student_value_min_list, shadow_student_value_max_min_list, shadow_student_value_max_mean_distance_list, shadow_student_value_mean_vertical_list, shadow_student_value_std_vertical_list, shadow_value_deviation_abs_sum_l1_list, shadow_value_deviation_abs_sum_l2_list, shadow_model_cos_distance_list, shadow_model_cos_distance_weighted_list, shadow_model_wasserstein_distance_list, shadow_model_our_weighted_cosine_list
@@ -1298,7 +1270,7 @@ class MyAuditor():
                 
                 
                 ## weighted cosine distance
-                teacher_student_cos_distance_weighted_record.append(cosine(student1_data.squeeze(), shadow_student_value_mean_list[index_i].squeeze(), np.abs(student1_data.squeeze() - shadow_student_value_mean_list[index_i].squeeze())))
+                teacher_student_cos_distance_weighted_record.append(cosine(student1_data.squeeze(), shadow_student_value_mean_list[index_i].squeeze()))
                 shadow_model_cos_distance_weighted_record.append(shadow_model_cos_distance_weighted_list[index_i])
                 
 
