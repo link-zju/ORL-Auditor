@@ -35,7 +35,10 @@ class TeacherModelTrain():
         
         sb3sac = sb3.SAC("MlpPolicy", train_env, verbose=1)
         sb3sac.learn(self.teacher_train_times)
-        model_name = f"sb3_sac_{self.train_env}_{get_time_stamp()}_{self.teacher_train_times}.zip"
+        model_name = f"sb3_sac_{self.train_env}_{self.random_seed}_{self.teacher_train_times}.zip"
+        
+        if not os.path.exists(self.teacher_save_path):
+            os.makedirs(self.teacher_save_path)
         model_save_path = os.path.join(self.teacher_save_path, model_name)
         sb3sac.save(model_save_path)
         
@@ -46,6 +49,9 @@ class TeacherModelTrain():
         
         sb3ppo = sb3.PPO("MlpPolicy", train_env, verbose=1)
         sb3ppo.learn(self.teacher_train_times)
-        model_name = f"sb3_ppo_{self.train_env}_{get_time_stamp()}_{self.teacher_train_times}.zip"
+        model_name = f"sb3_ppo_{self.train_env}_{self.random_seed}_{self.teacher_train_times}.zip"
+        
+        if not os.path.exists(self.teacher_save_path):
+            os.makedirs(self.teacher_save_path)
         model_save_path = os.path.join(self.teacher_save_path, model_name)
         sb3ppo.save(model_save_path)

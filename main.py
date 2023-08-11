@@ -78,6 +78,8 @@ class MainExperiment():
                  trajectory_size, 
                  trajectory_splitting_num, 
                  
+                 significance_level,
+
                  random_seed, 
                  debug=False,
                  ) -> None:
@@ -146,7 +148,7 @@ class MainExperiment():
         
         self.trajectory_size = trajectory_size
         self.trajectory_splitting_num = trajectory_splitting_num
-        
+        self.significance_level = significance_level
         
         
         if "train_teacher_model" == which_experiment:
@@ -204,14 +206,16 @@ class MainExperiment():
         if ".zip" in self.teacher_buffer_save_path:
             temp_index = self.teacher_buffer_save_path.rindex("/")
             self.teacher_buffer_save_path = self.teacher_buffer_save_path[:temp_index]
-                
+
+        if not os.path.exists(self.teacher_buffer_save_path):
+            os.makedirs(self.teacher_buffer_save_path)
+
         if self.teacher_buffer_create_method == 'trained':
-            
             buffer_save_name = drl_agent_path.split('/')[-1][:drl_agent_path.split('/')[-1].find('.')]
             buffer_save_path = os.path.join(self.teacher_buffer_save_path, buffer_save_name)
 
         elif self.teacher_buffer_create_method == 'random':
-            buffer_save_path = self.teacher_buffer_save_path + 'random_policy'
+            buffer_save_path = os.path.join(self.teacher_buffer_save_path, 'random_policy')
             
         BufferCreate(drl_agent_path, 
                      self.teacher_agent_from, 
@@ -357,7 +361,11 @@ class MainExperiment():
                              self.student_model_tag,
                              self.student_agent_type,
                              self.num_of_audited_episode,
+
                              self.num_shadow_student, 
+                             self.trajectory_size,
+                             self.significance_level, 
+
                              self.env_name,
                              self.cuda_id)
         
@@ -403,7 +411,7 @@ class MainExperiment():
 if __name__ == '__main__':
     
     load_use_args = True
-    datasets_and_models_set = "datasets_and_models_set1"
+    datasets_and_models_set = "datasets_and_models_set2"
     expt_setting = "baseline"
     
     
@@ -411,24 +419,19 @@ if __name__ == '__main__':
         args = para.offlineRL_main_exp()
 
         env_name = args.env_name
-        if 'CartPole-v1' == env_name:
-            expt_dataset_name = 'dqn_cartpole'
-            
-        elif 'LunarLanderContinuous-v2' == env_name:
+
+        if 'LunarLanderContinuous-v2' == env_name:
             expt_dataset_name = 'sac_lunarlander'
+
+        elif 'BipedalWalker-v3' == env_name:
+            expt_dataset_name = 'sac_bipedalwalker'
+
+        elif 'Ant-v2' == env_name:
+            expt_dataset_name = 'sac_ant'
             
         elif 'HalfCheetah-v2' == env_name:
             expt_dataset_name = 'rluply_d4rl_halfcheetah'
-        
-        elif 'Ant-v2' == env_name:
-            expt_dataset_name = 'sac_ant-v2'
-        
-        elif 'LunarLander-v2' == env_name:
-            expt_dataset_name = 'sac_discretelunarlander'
-        
-        elif 'BipedalWalker-v3' == env_name:
-            expt_dataset_name = 'sac_bipedalwalker'
-            
+
         else: print('Error: expt_dataset_name illegal')
 
         which_experiment = args.which_experiment
@@ -507,6 +510,7 @@ if __name__ == '__main__':
         trajectory_size = args.trajectory_size
         trajectory_splitting_num = args.trajectory_splitting_num
         
+        significance_level = args.significance_level
         random_seed = args.random_seed
 
         teacher_buffer_is_mixed_buffer = args.teacher_buffer_is_mixed_buffer
@@ -647,6 +651,8 @@ if __name__ == '__main__':
                               trajectory_size, 
                               trajectory_splitting_num,
                               
+                              significance_level,
+
                               random_seed,
                               debug=debug
                               )

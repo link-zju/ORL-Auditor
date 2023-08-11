@@ -12,8 +12,8 @@ def str2bool(v) -> bool:
 
 def offlineRL_main_exp():  # intialize paprameters
     parser = argparse.ArgumentParser("")
-    
-    parser.add_argument("--env_name", type=str, default='LunarLanderContinuous-v2')
+    parser.add_argument("--datasets_and_models_dir", type=str, default='datasets_and_models_set2')
+    parser.add_argument("--env_name", type=str, default='')
     parser.add_argument("--which_experiment", type=str, default='')
     parser.add_argument("--teacher_buffer_save_path", type=str, default='')
     
@@ -46,6 +46,7 @@ def offlineRL_main_exp():  # intialize paprameters
     parser.add_argument("--debug", type=str2bool, default=False)
     parser.add_argument("--random_seed", type=int, default=0)
     
+    parser.add_argument("--significance_level", type=float, default=0.01)
     parser.add_argument("--trajectory_size", type=float, default=1.0)
     parser.add_argument("--trajectory_splitting_num", type=int, default=1)
     

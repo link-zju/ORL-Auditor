@@ -542,7 +542,7 @@ class MyAuditor():
 
 
     @staticmethod
-    def data_audit(audit_dataset_path, critic_model_tag, suspected_model_path, result_save_path, suspected_model_tag, suspected_model_type, num_of_audited_episode, num_shadow_student, env_name, cuda_id, gamma=0.99):
+    def data_audit(audit_dataset_path, critic_model_tag, suspected_model_path, result_save_path, suspected_model_tag, suspected_model_type, num_of_audited_episode, num_shadow_student, trajectory_size, significance_level, env_name, cuda_id, gamma=0.99):
         def feature_generator(shadow_student_list, critic_model_path, audit_mdpdataset, num_of_audited_episode):    
         
             shadow_student_value_mean_list = []
@@ -565,7 +565,8 @@ class MyAuditor():
                 model_list.append(copy.deepcopy(drl_shadow))
             
             for index_i, episode in enumerate(audit_mdpdataset):
-                obs_data = episode.observations
+                # import pdb; pdb.set_trace()
+                obs_data = episode.observations[:int(episode.observations.shape[0]*trajectory_size)]
                 if index_i >= num_of_audited_episode:
                     break
                 
@@ -618,36 +619,12 @@ class MyAuditor():
             return shadow_student_value_mean_list, shadow_value_deviation_abs_sum_l1_list, shadow_value_deviation_abs_sum_l2_list, shadow_model_cos_distance_list, shadow_model_wasserstein_distance_list
         
         
-        
         device = torch.device('cuda:{}'.format(cuda_id) if torch.cuda.is_available() else 'cpu')
-        audit_mdpdataset = MDPDataset.load(audit_dataset_path)
-        audit_dataset_name = audit_dataset_path.split("/")[-1]
-        
+        # audit_dataset_file_list = os.listdir(audit_dataset_path)
+        audit_dataset_file_list = glob.glob(f'{audit_dataset_path}/*')
+        print(audit_dataset_file_list)
+        print(suspected_model_path)
 
-        
-        critic_model_path = audit_dataset_path.replace("teacher_buffer", "auditor/trained_critic_model")
-        critic_model_path = critic_model_path[:critic_model_path.find(".h5")]
-        critic_model_path = os.path.join(critic_model_path, critic_model_tag)
-        
-        # teacher_of_student_list = os.listdir(suspected_model_path)
-        teacher_of_student_list = glob.glob(f'{suspected_model_path}/*/{suspected_model_type}_*/*{suspected_model_tag}*')
-
-        teacher_of_student_list = sorted(teacher_of_student_list)
-
-        
-        ## select shadow model
-        shadow_student_list = []
-        temp_teacher_of_student_list = copy.deepcopy(teacher_of_student_list)
-        for teacher_of_student in temp_teacher_of_student_list:
-            if audit_dataset_name in teacher_of_student and len(shadow_student_list) < num_shadow_student:        
-                shadow_student_list.append(teacher_of_student)
-                teacher_of_student_list.remove(teacher_of_student)
-        
-        # shadow_student_value_mean_list, shadow_student_value_std_list, shadow_student_value_mean_vertical_list, shadow_student_value_std_vertical_list, shadow_value_deviation_abs_sum_l1_list, shadow_value_deviation_abs_sum_l2_list, shadow_model_cos_distance_list, shadow_model_cos_distance_weighted_list, shadow_model_wasserstein_distance_list, shadow_model_our_weighted_cosine_list = feature_generator(shadow_student_list, critic_model_path, audit_mdpdataset, num_of_audited_episode)
-        
-        shadow_student_value_mean_list, shadow_value_deviation_abs_sum_l1_list, shadow_value_deviation_abs_sum_l2_list, shadow_model_cos_distance_list, shadow_model_wasserstein_distance_list = feature_generator(shadow_student_list, critic_model_path, audit_mdpdataset, num_of_audited_episode)
-        
-        
         # data_record
         episode_record = []
         actual_buffer_name_record = []
@@ -679,53 +656,82 @@ class MyAuditor():
         teacher_student_our_weighted_cosine_record = []
         shadow_model_our_weighted_cosine_record = []
         
-        for suspected_model_name in teacher_of_student_list:
-            json_path = suspected_model_name.replace(f"{suspected_model_tag}", "params.json")
-            drl_agent = MyAuditor.load_agent_from_json(json_path=json_path, suspected_model_type=suspected_model_type, cuda_id=cuda_id)
-            print(suspected_model_name)
-            drl_agent.load_model(suspected_model_name)
-            teacher_name = suspected_model_name.split("/")[-3]
-            student_name = suspected_model_name.split("/")[-2]
+        for audit_dataset_path in audit_dataset_file_list:
+            audit_mdpdataset = MDPDataset.load(audit_dataset_path)
+            audit_dataset_name = audit_dataset_path.split("/")[-1]
             
-            for index_i, episode in enumerate(audit_mdpdataset.episodes):
-                if index_i >= num_of_audited_episode:
-                    break
-                print(f'episode: {index_i}')
-                
 
-                probe_actions1 = drl_agent.predict(episode.observations)                
-                probe_actions1 = probe_actions1 if len(probe_actions1.shape)>1 else np.expand_dims(probe_actions1, axis=1)                    
-                
-                data_to_evaluate1 = np.concatenate((episode.observations, probe_actions1), axis=1)
-                student1_data = MyAuditor.value_estimation(data_to_evaluate1, critic_model_path, device)
-                
-                
-                ## L1-norm
-                sum_teacher_student1 = sum(abs(shadow_student_value_mean_list[index_i].squeeze() - student1_data.squeeze()))
-                teacher_student_l1_distance_record.append(sum_teacher_student1)
-                shadow_value_deviation_abs_sum_l1_record.append(shadow_value_deviation_abs_sum_l1_list[index_i])
-                
-                
-                ## L2-norm
-                teacher_student_l2_distance = np.sum(np.square(shadow_student_value_mean_list[index_i].squeeze() - student1_data.squeeze()))
-                teacher_student_l2_distance_record.append(teacher_student_l2_distance)
-                shadow_value_deviation_abs_sum_l2_record.append(shadow_value_deviation_abs_sum_l2_list[index_i])
-                
-                ## cosine distance
-                teacher_student_cos_distance_record.append(cosine(shadow_student_value_mean_list[index_i].squeeze(), student1_data.squeeze()))
-                shadow_model_cos_distance_record.append(shadow_model_cos_distance_list[index_i])
-                                     
+            
+            critic_model_path = audit_dataset_path.replace("teacher_buffer", "auditor/trained_critic_model")
+            critic_model_path = critic_model_path[:critic_model_path.find(".h5")]
+            critic_model_path = os.path.join(critic_model_path, critic_model_tag)
+            
+            # teacher_of_student_list = os.listdir(suspected_model_path)
+            teacher_of_student_list = glob.glob(f'{suspected_model_path}/*/{suspected_model_type}_*/*{suspected_model_tag}*')
 
-                ## wasserstein distance
-                teacher_student_wasserstein_distance_record.append(wasserstein_distance(student1_data.squeeze(), shadow_student_value_mean_list[index_i].squeeze()))
-                shadow_model_wasserstein_distance_record.append(shadow_model_wasserstein_distance_list[index_i])
+            teacher_of_student_list = sorted(teacher_of_student_list)
+
+            
+            ## select shadow model
+            shadow_student_list = []
+            temp_teacher_of_student_list = copy.deepcopy(teacher_of_student_list)
+            for teacher_of_student in temp_teacher_of_student_list:
+                if audit_dataset_name in teacher_of_student and len(shadow_student_list) < num_shadow_student:        
+                    shadow_student_list.append(teacher_of_student)
+                    teacher_of_student_list.remove(teacher_of_student)
+            
+            # shadow_student_value_mean_list, shadow_student_value_std_list, shadow_student_value_mean_vertical_list, shadow_student_value_std_vertical_list, shadow_value_deviation_abs_sum_l1_list, shadow_value_deviation_abs_sum_l2_list, shadow_model_cos_distance_list, shadow_model_cos_distance_weighted_list, shadow_model_wasserstein_distance_list, shadow_model_our_weighted_cosine_list = feature_generator(shadow_student_list, critic_model_path, audit_mdpdataset, num_of_audited_episode)
+            
+            shadow_student_value_mean_list, shadow_value_deviation_abs_sum_l1_list, shadow_value_deviation_abs_sum_l2_list, shadow_model_cos_distance_list, shadow_model_wasserstein_distance_list = feature_generator(shadow_student_list, critic_model_path, audit_mdpdataset, num_of_audited_episode)
+            
+            
+            for suspected_model_name in teacher_of_student_list:
+                json_path = suspected_model_name.replace(f"{suspected_model_tag}", "params.json")
+                drl_agent = MyAuditor.load_agent_from_json(json_path=json_path, suspected_model_type=suspected_model_type, cuda_id=cuda_id)
+                print(suspected_model_name)
+                drl_agent.load_model(suspected_model_name)
+                teacher_name = suspected_model_name.split("/")[-3]
+                student_name = suspected_model_name.split("/")[-2]
                 
-                
-                episode_record.append(index_i)
-                actual_buffer_name_record.append(teacher_name)
-                student_name_record.append(student_name)
-                audit_buffer_name_record.append(audit_dataset_name)
-                
+                for index_i, episode in enumerate(audit_mdpdataset.episodes):
+                    if index_i >= num_of_audited_episode:
+                        break
+                    print(f'episode: {index_i}')
+                    
+
+                    probe_actions1 = drl_agent.predict(episode.observations[:int(episode.observations.shape[0]*trajectory_size)])                
+                    probe_actions1 = probe_actions1 if len(probe_actions1.shape)>1 else np.expand_dims(probe_actions1, axis=1)                    
+                    
+                    data_to_evaluate1 = np.concatenate((episode.observations[:int(episode.observations.shape[0]*trajectory_size)], probe_actions1), axis=1)
+                    student1_data = MyAuditor.value_estimation(data_to_evaluate1, critic_model_path, device)
+                    
+                    
+                    ## L1-norm
+                    sum_teacher_student1 = sum(abs(shadow_student_value_mean_list[index_i].squeeze() - student1_data.squeeze()))
+                    teacher_student_l1_distance_record.append(sum_teacher_student1)
+                    shadow_value_deviation_abs_sum_l1_record.append(shadow_value_deviation_abs_sum_l1_list[index_i])
+                    
+                    
+                    ## L2-norm
+                    teacher_student_l2_distance = np.sum(np.square(shadow_student_value_mean_list[index_i].squeeze() - student1_data.squeeze()))
+                    teacher_student_l2_distance_record.append(teacher_student_l2_distance)
+                    shadow_value_deviation_abs_sum_l2_record.append(shadow_value_deviation_abs_sum_l2_list[index_i])
+                    
+                    ## cosine distance
+                    teacher_student_cos_distance_record.append(cosine(shadow_student_value_mean_list[index_i].squeeze(), student1_data.squeeze()))
+                    shadow_model_cos_distance_record.append(shadow_model_cos_distance_list[index_i])
+                                        
+
+                    ## wasserstein distance
+                    teacher_student_wasserstein_distance_record.append(wasserstein_distance(student1_data.squeeze(), shadow_student_value_mean_list[index_i].squeeze()))
+                    shadow_model_wasserstein_distance_record.append(shadow_model_wasserstein_distance_list[index_i])
+                    
+                    
+                    episode_record.append(index_i)
+                    actual_buffer_name_record.append(teacher_name)
+                    student_name_record.append(student_name)
+                    audit_buffer_name_record.append(audit_dataset_name)
+        
         data_dict = {'episode': episode_record, 
                     'actual_buffer_name': actual_buffer_name_record,
                     'student_name': student_name_record, 
@@ -743,14 +749,14 @@ class MyAuditor():
                     'teacher_student_wasserstein_distance': teacher_student_wasserstein_distance_record,
                     'shadow_model_wasserstein_distance': shadow_model_wasserstein_distance_record,     
                     }
-        
         df = pd.DataFrame.from_dict(data_dict)
         
-        df_save_path = os.path.join(result_save_path, 'audit_result-numepi_{}-audname_{}-critag_{}-sustype_{}-sustag_{}-numstu_{}-{}.xlsx'.format(num_of_audited_episode, audit_dataset_name, critic_model_tag[:critic_model_tag.find(".")], suspected_model_type, suspected_model_tag, num_shadow_student, get_time_stamp()))
+        df_save_path = os.path.join(result_save_path, 'audit_result-numepi_{}-envname_{}-critag_{}-sustype_{}-sustag_{}-numstu_{}-trajsize_{}-signlevel_{}-{}.xlsx'.format(num_of_audited_episode, env_name, critic_model_tag[:critic_model_tag.find(".")], suspected_model_type, suspected_model_tag, num_shadow_student, trajectory_size, significance_level, get_time_stamp()))
         
+        if not os.path.exists(result_save_path):
+            os.makedirs(result_save_path)
         df.to_excel(df_save_path)
-        
-        MyAuditor.hypothesis_testing(df_save_path)
+        MyAuditor.hypothesis_testing(df_save_path, sigma=significance_level)
         
         
     
@@ -768,7 +774,7 @@ class MyAuditor():
                 model_list.append(copy.deepcopy(drl_shadow))
             
             for index_i, episode in enumerate(audit_mdpdataset):
-                obs_data = episode.observations
+                obs_data = episode.observations[:int(episode.observations.shape[0]*trajectory_size)]
                 if index_i >= num_of_audited_episode:
                     break
                 
@@ -841,11 +847,11 @@ class MyAuditor():
                     break
                 print(f'episode: {index_i}')
                 
-                # data_to_evaluate = np.concatenate((episode.observations, episode.actions), axis=1)
+                # data_to_evaluate = np.concatenate((episode.observations[:int(episode.observations.shape[0]*trajectory_size)], episode.actions), axis=1)
                 # teacher_data = MyAuditor.value_estimation(data_to_evaluate, critic_model_path, device)
                 # teacher_data_next = episode.rewards[:-1]/max_abs_reward + gamma * teacher_data[1:]
 
-                probe_actions1 = drl_agent.predict(episode.observations)
+                probe_actions1 = drl_agent.predict(episode.observations[:int(episode.observations.shape[0]*trajectory_size)])
                 
                 ## robustness test 20230130 by linkang
                 # probe_actions1 = probe_actions1 + np.random.normal(0, noise_std, probe_actions1.shape)
@@ -943,18 +949,18 @@ class MyAuditor():
             
             shadow_state_action_value_list = []
             for shadow_model in shadow_model_list:
-                probe_actions1 = shadow_model.predict(episode.observations)
+                probe_actions1 = shadow_model.predict(episode.observations[:int(episode.observations.shape[0]*trajectory_size)])
                 probe_actions1 = probe_actions1 if len(probe_actions1.shape)>1 else np.expand_dims(probe_actions1, axis=1)                    
-                data_to_evaluate1 = np.concatenate((episode.observations, probe_actions1), axis=1)
+                data_to_evaluate1 = np.concatenate((episode.observations[:int(episode.observations.shape[0]*trajectory_size)], probe_actions1), axis=1)
                 student1_data = MyAuditor.value_estimation(data_to_evaluate1, critic_model_path, device)
                 shadow_state_action_value_list.append(copy.deepcopy(student1_data.reshape(1, -1)))       
             shadow_value_stack = np.concatenate(shadow_state_action_value_list, axis=0)
 
             suspect_state_action_value_list = []
             for suspected_model in suspected_model_list:
-                probe_actions2 = suspected_model.predict(episode.observations)
+                probe_actions2 = suspected_model.predict(episode.observations[:int(episode.observations.shape[0]*trajectory_size)])
                 probe_actions2 = probe_actions2 if len(probe_actions2.shape)>1 else np.expand_dims(probe_actions2, axis=1)                    
-                data_to_evaluate1 = np.concatenate((episode.observations, probe_actions2), axis=1)
+                data_to_evaluate1 = np.concatenate((episode.observations[:int(episode.observations.shape[0]*trajectory_size)], probe_actions2), axis=1)
                 student2_data = MyAuditor.value_estimation(data_to_evaluate1, critic_model_path, device)
                 suspect_state_action_value_list.append(copy.deepcopy(student2_data.reshape(1, -1)))       
             suspect_value_stack = np.concatenate(suspect_state_action_value_list, axis=0)
@@ -1006,7 +1012,7 @@ class MyAuditor():
                 model_list.append(copy.deepcopy(drl_shadow))
             
             for index_i, episode in enumerate(audit_mdpdataset):
-                obs_data = episode.observations
+                obs_data = episode.observations[:int(episode.observations.shape[0]*trajectory_size)]
                 if index_i >= num_of_audited_episode:
                     break
                 
@@ -1197,12 +1203,12 @@ class MyAuditor():
                     break
                 print(f'episode: {index_i}')
                 
-                # data_to_evaluate = np.concatenate((episode.observations, episode.actions), axis=1)
+                # data_to_evaluate = np.concatenate((episode.observations[:int(episode.observations.shape[0]*trajectory_size)], episode.actions), axis=1)
                 # teacher_data = MyAuditor.value_estimation(data_to_evaluate, critic_model_path, device)
                 # teacher_data_next = episode.rewards[:-1]/max_abs_reward + gamma * teacher_data[1:]
-                probe_actions1 = np.zeros_like(drl_agent_list[0].predict(episode.observations))
+                probe_actions1 = np.zeros_like(drl_agent_list[0].predict(episode.observations[:int(episode.observations.shape[0]*trajectory_size)]))
                 for _drl_agent in drl_agent_list:
-                    probe_actions1 += _drl_agent.predict(episode.observations)
+                    probe_actions1 += _drl_agent.predict(episode.observations[:int(episode.observations.shape[0]*trajectory_size)])
                 
                 probe_actions1 = probe_actions1/len(drl_agent_list)
                 
@@ -1211,7 +1217,7 @@ class MyAuditor():
                 
                 probe_actions1 = probe_actions1 if len(probe_actions1.shape)>1 else np.expand_dims(probe_actions1, axis=1)                    
                 
-                data_to_evaluate1 = np.concatenate((episode.observations, probe_actions1), axis=1)
+                data_to_evaluate1 = np.concatenate((episode.observations[:int(episode.observations.shape[0]*trajectory_size)], probe_actions1), axis=1)
                 student1_data = MyAuditor.value_estimation(data_to_evaluate1, critic_model_path, device)
                 
                 
@@ -1498,7 +1504,7 @@ class MyAuditor():
 
         elif 'audit_acc_grubbs' == anomaly_detection_method:
             all_results = {'anomaly detection': 'audit_acc_grubbs', 'sigma': sigma, 'results_between_each_two_datasets': {}, 'results_for_auditing_dataset':{}}
-  
+        
         
         for used_metric_index, used_metric in enumerate(used_metric_list):
             df_load = pd.read_excel(result_save_path)
@@ -1534,9 +1540,9 @@ class MyAuditor():
                     print(f"{actual_buffer_name}-{audit_buffer_name}-{acc_result}")
                     
                     if 0 == used_metric_index:
-                        all_results['results_between_each_two_datasets']['actual_buffer_name: {}-audit_buffer_name: {}'.format(actual_buffer_name.split('_')[3], audit_buffer_name.split('_')[3])] = {}
+                        all_results['results_between_each_two_datasets']['actual_buffer_name: {}-audit_buffer_name: {}'.format(re.findall('20[0-9]+|$', actual_buffer_name)[0], re.findall('20[0-9]+|$', audit_buffer_name)[0])] = {}
                     
-                    all_results['results_between_each_two_datasets']['actual_buffer_name: {}-audit_buffer_name: {}'.format(actual_buffer_name.split('_')[3], audit_buffer_name.split('_')[3])][f'{used_metric}'] = {'Accuracy': acc_result, 'Number of trajectories from the suspect model': df_load_copy.shape[0]}
+                    all_results['results_between_each_two_datasets']['actual_buffer_name: {}-audit_buffer_name: {}'.format(re.findall('20[0-9]+|$', actual_buffer_name)[0], re.findall('20[0-9]+|$', audit_buffer_name)[0])][f'{used_metric}'] = {'Accuracy': acc_result, 'Number of trajectories from the suspect model': df_load_copy.shape[0]}
                     
                     if actual_buffer_name == audit_buffer_name:
                         temp_true_positive_models += acc_number
@@ -1548,12 +1554,19 @@ class MyAuditor():
                 true_positive_rate = temp_true_positive_models/temp_all_positive_models
                 true_negative_rate = temp_true_negative_models/temp_all_negative_models
                 
-                if 0 == used_metric_index:
-                    all_results['results_for_auditing_dataset']['audit_buffer_name: {}'.format(audit_buffer_name.split('_')[3])] = {}
+                #     if actual_buffer_name == audit_buffer_name:
+                #         true_positive_rate = acc_number/df_load_copy.shape[0]
+                #     else:
+                #         true_negative_rate = acc_number/df_load_copy.shape[0]
                 
-                all_results['results_for_auditing_dataset']['audit_buffer_name: {}'.format(audit_buffer_name.split('_')[3])][f'{used_metric}'] = {'True Positive Rate': true_positive_rate, 'True Negative Rate': true_negative_rate}
+                # true_positive_rate = temp_true_positive_models/temp_all_positive_models
+                # true_negative_rate = temp_true_negative_models/temp_all_negative_models
+                
+                if 0 == used_metric_index:
+                    all_results['results_for_auditing_dataset']['audit_buffer_name: {}'.format(re.findall('20[0-9]+|$', audit_buffer_name)[0])] = {}
+                
+                all_results['results_for_auditing_dataset']['audit_buffer_name: {}'.format(re.findall('20[0-9]+|$', audit_buffer_name)[0])][f'{used_metric}'] = {'True Positive Rate': true_positive_rate, 'True Negative Rate': true_negative_rate}
                     
-
         target_save_path = result_save_path.replace('xlsx', 'json')
         
         with open(target_save_path, 'w') as fp:
@@ -1654,7 +1667,7 @@ if __name__ == '__main__':
     # evaluated_value_mdpdataset = MDPDataset.load(evaluated_value_path)
     # for episode in evaluated_value_mdpdataset.episodes:
     #     print(episode)
-    #     data_to_evaluate = np.concatenate((episode.observations, episode.actions), axis=1)
+    #     data_to_evaluate = np.concatenate((episode.observations[:int(episode.observations.shape[0]*trajectory_size)], episode.actions), axis=1)
     #     # print(data_to_evaluate)
     #     MyAuditor.value_estimation(data_to_evaluate, device)
     '''
@@ -1705,17 +1718,17 @@ if __name__ == '__main__':
             break
         print(f'episode: {index_i}')
         # print(episode)
-        data_to_evaluate = np.concatenate((episode.observations, episode.actions), axis=1)
+        data_to_evaluate = np.concatenate((episode.observations[:int(episode.observations.shape[0]*trajectory_size)], episode.actions), axis=1)
         
         # print(data_to_evaluate)
         teacher_data = MyAuditor.value_estimation(data_to_evaluate, device)
         teacher_data_next = episode.rewards[:-1]*0.01 + gamma * teacher_data[1:]
 
-        probe_actions1 = drl_agent1.predict(episode.observations)
-        probe_actions2 = drl_agent2.predict(episode.observations)
+        probe_actions1 = drl_agent1.predict(episode.observations[:int(episode.observations.shape[0]*trajectory_size)])
+        probe_actions2 = drl_agent2.predict(episode.observations[:int(episode.observations.shape[0]*trajectory_size)])
 
-        data_to_evaluate1 = np.concatenate((episode.observations, probe_actions1), axis=1)
-        data_to_evaluate2 = np.concatenate((episode.observations, probe_actions2), axis=1)
+        data_to_evaluate1 = np.concatenate((episode.observations[:int(episode.observations.shape[0]*trajectory_size)], probe_actions1), axis=1)
+        data_to_evaluate2 = np.concatenate((episode.observations[:int(episode.observations.shape[0]*trajectory_size)], probe_actions2), axis=1)
 
         
         student1_data = MyAuditor.value_estimation(data_to_evaluate1, device)
@@ -1849,14 +1862,14 @@ if __name__ == '__main__':
                 break
             print(f'episode: {index_i}')
             # print(episode)
-            data_to_evaluate = np.concatenate((episode.observations, episode.actions), axis=1)
+            data_to_evaluate = np.concatenate((episode.observations[:int(episode.observations.shape[0]*trajectory_size)], episode.actions), axis=1)
             
             # print(data_to_evaluate)
             teacher_data = MyAuditor.value_estimation(data_to_evaluate, device)
             teacher_data_next = episode.rewards[:-1]*0.01 + gamma * teacher_data[1:]
 
-            probe_actions1 = drl_agent.predict(episode.observations)
-            data_to_evaluate1 = np.concatenate((episode.observations, probe_actions1), axis=1)
+            probe_actions1 = drl_agent.predict(episode.observations[:int(episode.observations.shape[0]*trajectory_size)])
+            data_to_evaluate1 = np.concatenate((episode.observations[:int(episode.observations.shape[0]*trajectory_size)], probe_actions1), axis=1)
             student1_data = MyAuditor.value_estimation(data_to_evaluate1, device)
 
             
