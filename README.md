@@ -32,7 +32,6 @@ ORL_Auditor_proj
 │       └── teacher_policy
 │           └── baseline
 ├── lib_util
-│   └── __pycache__
 └── result_save
     └── datasets_and_models_set1
         └── sac_lunarlander
@@ -51,9 +50,9 @@ docker run -it --gpus all  -v $PROJECT_SAVE_PATH:/workspace/off-rl  -d  orl-audi
 source activate   ## activate the virtualenv (venv)
 ```
 
-Then, we can advance to the following steps.
-Table II of the paper illustrates the detailed process and the random seed settings.
-`phase1_preparation.sh` allows for the automated execution of the model training. This enhancement enables a straightforward execution of all necessary Phase 2 model preparations with the simple command `bash phase1_preparation.sh`. Additionally, specific experimental settings employed can be reviewed within `phase1_preparation.sh`, spanning from Line 53 to Line 58.
+Then, we can advance to the following steps. Table II of the paper illustrates the detailed process and the random seed settings.
+
+**NOTE:** `phase1_preparation.sh` allows for the automated execution of the model training. This enhancement enables a straightforward execution of all necessary Phase 2 model preparations with the simple command `bash phase1_preparation.sh`. Additionally, specific experimental settings employed can be reviewed within `phase1_preparation.sh`, spanning from Line 53 to Line 58.
 
 #### Step 1: Train online RL models
 
@@ -114,54 +113,66 @@ python main.py --env_name LunarLanderContinuous-v2 --which_experiment auditor_tr
 
 ### Phase 2: Execution
 
-`phase2_execution.sh` serves to oversee dataset audits and the generation of TPR/TNR values. These values, as demonstrated in TABLE IV, Fig. 7, and Fig. 8, effectively showcase the prowess of ORL-Auditor. Modifications to hyperparameter settings can also be easily implemented within `phase2_execution.sh`, found between Line 43 and Line 46.
+**NOTE:** `phase2_execution.sh` serves to audit the datasets and the generation of TPR/TNR values. These values, as demonstrated in TABLE IV, Fig. 6, Fig. 7, and Fig. 8, effectively showcase the prowess of ORL-Auditor. Modifications to hyperparameter settings can also be easily implemented within `phase2_execution.sh`, found between Line 43 and Line 46.
 
 #### Results in Table IV
-```python
-python main.py --env_name LunarLanderContinuous-v2 --which_experiment audit_dataset  --teacher_buffer_save_path ./datasets_and_models_set1/sac_lunarlander/teacher_buffer/baseline/sb3_sac_LunarLanderContinuous-v2_20221017163911171_1000000-50000.h5 --critic_model_tag ckpt_200.pt --student_model_tag model_50000.pt --student_agent_type  TD3PlusBC  --num_of_audited_episode 50 --num_shadow_student 15 --random_seed 0 --cuda 0
+
+```bash
+num_shadow_student=15
+significance_level=0.01
+trajectory_size=1.0
 ```
 
 #### Results in Fig. 6
 
 9 shadow models
 
-```python
-python main.py --env_name LunarLanderContinuous-v2 --which_experiment audit_dataset  --teacher_buffer_save_path ./datasets_and_models_set1/sac_lunarlander/teacher_buffer/baseline/sb3_sac_LunarLanderContinuous-v2_20221017163911171_1000000-50000.h5 --critic_model_tag ckpt_200.pt --student_model_tag model_50000.pt --student_agent_type  TD3PlusBC  --num_of_audited_episode 50 --num_shadow_student 9 --random_seed 0 --cuda 0
+```bash
+num_shadow_student=9
+significance_level=0.01
+trajectory_size=1.0
 ```
 
 21 shadow models
 
-```python
-python main.py --env_name LunarLanderContinuous-v2 --which_experiment audit_dataset  --teacher_buffer_save_path ./datasets_and_models_set1/sac_lunarlander/teacher_buffer/baseline/sb3_sac_LunarLanderContinuous-v2_20221017163911171_1000000-50000.h5 --critic_model_tag ckpt_200.pt --student_model_tag model_50000.pt --student_agent_type  TD3PlusBC  --num_of_audited_episode 50 --num_shadow_student 9 --random_seed 0 --cuda 0
+```bash
+num_shadow_student=21
+significance_level=0.01
+trajectory_size=1.0
 ```
 
 #### Results in Fig. 7
 
 significance level = 0.001
 
-```python
-python main.py --env_name LunarLanderContinuous-v2 --which_experiment audit_dataset  --teacher_buffer_save_path ./datasets_and_models_set1/sac_lunarlander/teacher_buffer/baseline/sb3_sac_LunarLanderContinuous-v2_20221017163911171_1000000-50000.h5 --critic_model_tag ckpt_200.pt --student_model_tag model_50000.pt --student_agent_type  TD3PlusBC  --num_of_audited_episode 50 --significance_level 0.001 --random_seed 0 --cuda 0
+```bash
+num_shadow_student=15
+significance_level=0.001
+trajectory_size=1.0
 ```
 
 significance level = 0.0001
 
-```python
-python main.py --env_name LunarLanderContinuous-v2 --which_experiment audit_dataset  --teacher_buffer_save_path ./datasets_and_models_set1/sac_lunarlander/teacher_buffer/baseline/sb3_sac_LunarLanderContinuous-v2_20221017163911171_1000000-50000.h5 --critic_model_tag ckpt_200.pt --student_model_tag model_50000.pt --student_agent_type  TD3PlusBC  --num_of_audited_episode 50 --significance_level 0.0001 --random_seed 0 --cuda 0
+```bash
+num_shadow_student=15
+significance_level=0.0001
+trajectory_size=1.0
 ```
 
 #### Results in Fig. 8
 
 25% of full trajectory
 
-```python
-python main.py --env_name LunarLanderContinuous-v2 --which_experiment audit_dataset  --teacher_buffer_save_path ./datasets_and_models_set1/sac_lunarlander/teacher_buffer/baseline/sb3_sac_LunarLanderContinuous-v2_20221017163911171_1000000-50000.h5 --critic_model_tag ckpt_200.pt --student_model_tag model_50000.pt --student_agent_type  TD3PlusBC  --num_of_audited_episode 50 --trajectory_size 0.25 --random_seed 0 --cuda 0
+```bash
+num_shadow_student=15
+significance_level=0.01
+trajectory_size=0.25
 ```
 
 50% of full trajectory
 
-```python
-python main.py --env_name LunarLanderContinuous-v2 --which_experiment audit_dataset  --teacher_buffer_save_path ./datasets_and_models_set1/sac_lunarlander/teacher_buffer/baseline/sb3_sac_LunarLanderContinuous-v2_20221017163911171_1000000-50000.h5 --critic_model_tag ckpt_200.pt --student_model_tag model_50000.pt --student_agent_type  TD3PlusBC  --num_of_audited_episode 50 --trajectory_size 0.25 --random_seed 0 --cuda 0
+```bash
+num_shadow_student=15
+significance_level=0.01
+trajectory_size=0.5
 ```
-
-
-<!-- Finally, we save the results into a `JSON` file. -->
