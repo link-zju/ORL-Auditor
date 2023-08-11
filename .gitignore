@@ -160,8 +160,4 @@ cython_debug/
 #.idea/
 
 
-# the generated datasets and trained models
-# datasets_and_models_set1/
-datasets_and_models_set2/
-datasets_and_models_set3/
-*DS_Store
+*.DS_Store

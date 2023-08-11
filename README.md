@@ -52,7 +52,7 @@ source activate   ## activate the virtualenv (venv)
 
 Then, we can advance to the following steps. Table II of the paper illustrates the detailed process and the random seed settings.
 
-**NOTE:** `phase1_preparation.sh` allows for the automated execution of the model training. This enhancement enables a straightforward execution of all necessary Phase 2 model preparations with the simple command `bash phase1_preparation.sh`. Additionally, specific experimental settings employed can be reviewed within `phase1_preparation.sh`, spanning from Line 53 to Line 58.
+**NOTE:** `phase1_preparation.sh` allows for the automated execution of the original steps in Phase 1. This enhancement enables a straightforward execution of all necessary model preparations with the simple command `bash phase1_preparation.sh`. Additionally, specific experimental settings employed can be reviewed within `phase1_preparation.sh`, spanning from Line 53 to Line 58.
 
 #### Step 1: Train online RL models
 
@@ -113,7 +113,7 @@ python main.py --env_name LunarLanderContinuous-v2 --which_experiment auditor_tr
 
 ### Phase 2: Execution
 
-**NOTE:** `phase2_execution.sh` serves to audit the datasets and the generation of TPR/TNR values. These values, as demonstrated in TABLE IV, Fig. 6, Fig. 7, and Fig. 8, effectively showcase the prowess of ORL-Auditor. Modifications to hyperparameter settings can also be easily implemented within `phase2_execution.sh`, found between Line 43 and Line 46.
+**NOTE:** `phase2_execution.sh` serves to audit the datasets and calculates the TPR/TNR values. These values, as demonstrated in TABLE IV, Fig. 6, Fig. 7, and Fig. 8, effectively showcase the effectiveness of ORL-Auditor. Modifications to hyperparameter settings can also be easily implemented within `phase2_execution.sh`, found between Line 43 and Line 46.
 
 #### Results in Table IV
 
