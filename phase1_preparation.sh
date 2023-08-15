@@ -58,6 +58,9 @@ number_student_model=30
 all_student_model_type=("BC" "BCQ" "IQL" "TD3PlusBC")
 
 
+
+
+
 for task_name in ${env_name[@]};
 do
     # train online policy
@@ -66,7 +69,7 @@ do
         select_GPU
         mkdir -p "./$datasets_and_models_dir/logs/${env_name_to_expt_dataset_name[$task_name]}/train_teacher_model"
         touch ./$datasets_and_models_dir/logs/${env_name_to_expt_dataset_name[$task_name]}/train_teacher_model/$i.txt
-        python main.py  --env_name $task_name --which_experiment train_teacher_model  --teacher_save_path ./$datasets_and_models_dir/${env_name_to_expt_dataset_name[$task_name]}/teacher_policy/baseline  --teacher_train_times $teacher_train_times --random_seed $i  --cuda $gpu_id > ./$datasets_and_models_dir/logs/${env_name_to_expt_dataset_name[$task_name]}/train_teacher_model/$i.txt &
+        python main.py  --datasets_and_models_dir $datasets_and_models_dir --env_name $task_name --which_experiment train_teacher_model  --teacher_save_path ./$datasets_and_models_dir/${env_name_to_expt_dataset_name[$task_name]}/teacher_policy/baseline  --teacher_train_times $teacher_train_times --random_seed $i  --cuda $gpu_id > ./$datasets_and_models_dir/logs/${env_name_to_expt_dataset_name[$task_name]}/train_teacher_model/$i.txt &
     done 
 
     forward_task_complete
@@ -78,7 +81,7 @@ do
     do
         select_GPU
         mkdir -p "./$datasets_and_models_dir/logs/${env_name_to_expt_dataset_name[$task_name]}/teacher_buffer"
-        python main.py  --env_name $task_name --which_experiment teacher_buffer_create --teacher_save_path ./$datasets_and_models_dir/${env_name_to_expt_dataset_name[$task_name]}/teacher_policy/baseline/$model_name --teacher_buffer_length 50000 --random_seed 0 --cuda $gpu_id > ./$datasets_and_models_dir/logs/${env_name_to_expt_dataset_name[$task_name]}/teacher_buffer/$model_name.txt &
+        python main.py  --datasets_and_models_dir $datasets_and_models_dir  --env_name $task_name --which_experiment teacher_buffer_create --teacher_save_path ./$datasets_and_models_dir/${env_name_to_expt_dataset_name[$task_name]}/teacher_policy/baseline/$model_name --teacher_buffer_length 50000 --random_seed 0 --cuda $gpu_id > ./$datasets_and_models_dir/logs/${env_name_to_expt_dataset_name[$task_name]}/teacher_buffer/$model_name.txt &
     done
 
     forward_task_complete
@@ -95,7 +98,7 @@ do
             echo $buffer_name $student_model_type $i
             mkdir -p "./$datasets_and_models_dir/logs/${env_name_to_expt_dataset_name[$task_name]}/train_student_model/$student_model_type"
             touch ./$datasets_and_models_dir/logs/${env_name_to_expt_dataset_name[$task_name]}/train_student_model/$student_model_type/$i.txt
-            python main.py  --env_name $task_name --which_experiment train_student_model --student_agent_type  $student_model_type  --teacher_buffer_save_path ./$datasets_and_models_dir/${env_name_to_expt_dataset_name[$task_name]}/teacher_buffer/baseline/$buffer_name --random_seed $i  --cuda $gpu_id > ./$datasets_and_models_dir/logs/${env_name_to_expt_dataset_name[$task_name]}/train_student_model/$student_model_type/$i.txt &
+            python main.py  --datasets_and_models_dir $datasets_and_models_dir  --env_name $task_name --which_experiment train_student_model --student_agent_type  $student_model_type  --teacher_buffer_save_path ./$datasets_and_models_dir/${env_name_to_expt_dataset_name[$task_name]}/teacher_buffer/baseline/$buffer_name --random_seed $i  --cuda $gpu_id > ./$datasets_and_models_dir/logs/${env_name_to_expt_dataset_name[$task_name]}/train_student_model/$student_model_type/$i.txt &
             done
         done
     done 
@@ -110,6 +113,6 @@ do
     do
         select_GPU
         mkdir -p "./$datasets_and_models_dir/logs/${env_name_to_expt_dataset_name[$task_name]}/auditor"
-        python main.py  --env_name $task_name --which_experiment auditor_train_critic_model --teacher_buffer_save_path ./$datasets_and_models_dir/${env_name_to_expt_dataset_name[$task_name]}/teacher_buffer/baseline/$buffer_name --random_seed 0 --cuda $gpu_id > ./$datasets_and_models_dir/logs/${env_name_to_expt_dataset_name[$task_name]}/auditor/$buffer_name.txt &
+        python main.py  --datasets_and_models_dir $datasets_and_models_dir  --env_name $task_name --which_experiment auditor_train_critic_model --teacher_buffer_save_path ./$datasets_and_models_dir/${env_name_to_expt_dataset_name[$task_name]}/teacher_buffer/baseline/$buffer_name --random_seed 0 --cuda $gpu_id > ./$datasets_and_models_dir/logs/${env_name_to_expt_dataset_name[$task_name]}/auditor/$buffer_name.txt &
     done
 done

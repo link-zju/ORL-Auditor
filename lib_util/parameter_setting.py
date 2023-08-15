@@ -12,7 +12,7 @@ def str2bool(v) -> bool:
 
 def offlineRL_main_exp():  # intialize paprameters
     parser = argparse.ArgumentParser("")
-    parser.add_argument("--datasets_and_models_dir", type=str, default='datasets_and_models_set2')
+    parser.add_argument("--datasets_and_models_dir", type=str, default='')
     parser.add_argument("--env_name", type=str, default='')
     parser.add_argument("--which_experiment", type=str, default='')
     parser.add_argument("--teacher_buffer_save_path", type=str, default='')

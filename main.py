@@ -411,12 +411,13 @@ class MainExperiment():
 if __name__ == '__main__':
     
     load_use_args = True
-    datasets_and_models_set = "datasets_and_models_set2"
     expt_setting = "baseline"
     
     
     if load_use_args:
         args = para.offlineRL_main_exp()
+        
+        datasets_and_models_set = args.datasets_and_models_dir
 
         env_name = args.env_name
 

@@ -46,7 +46,8 @@ trajectory_size=1.0
 random_seed=0
 
 
-datasets_and_models_dir=datasets_and_models_set2
+datasets_and_models_dir=datasets_and_models_set1
+
 env_name=("LunarLanderContinuous-v2" "BipedalWalker-v3" "Ant-v2")
 all_student_model_type=("BC" "BCQ" "IQL" "TD3PlusBC")
 
