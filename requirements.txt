@@ -3,7 +3,10 @@ d3rlpy==1.1.1
 gym==0.21.0
 setuptools==65.5.0
 matplotlib==3.5.2
+mujoco==2.2.1
+mujoco-py==2.1.2.14
 numpy==1.22.3
+openpyxl==3.1.2
 pandas==1.4.3
 scikit_learn==1.1.1
 scipy==1.8.1
@@ -11,3 +14,4 @@ stable_baselines3==1.6.2
 Box2D==2.3.10
 GPUtil==1.4.0
 psutil==5.9.5
+
