@@ -3,7 +3,7 @@
 ## Introduction
 
 This is a guideline for reproducing the experiment of NDSS paper named **"ORL-AUDITOR: Dataset Auditing in Offline Deep Reinforcement Learning"** (https://dx.doi.org/10.14722/ndss.2024.23184). 
-This project is licensed under the Apache License 2.0. 
+This project is licensed under the MIT License. 
 
 For ease of understanding, we divide the workflow into two phases, i.e., preparation and execution. In the preparation, we build the offline datasets and train the offline RL models. Then, in the execution, we utilize the proposed method (ORL-Auditor) to audit the suspect models.
 
