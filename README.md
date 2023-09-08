@@ -646,7 +646,7 @@ The human-readable table is saved as `./result_save/datasets_and_models_set1/aud
 
 The main results in the paper and the corresponding hyperparameter settings are shown below.
 
-#### Results in Table IV
+#### Results in Table V
 
 ```ymal
 num_shadow_student: 15
