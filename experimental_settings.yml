@@ -1,0 +1,40 @@
+## Experimental settings for quick test
+datasets_and_models_dir: datasets_and_models_set1
+number_teacher_model: 2
+teacher_train_times: 10000
+number_student_model: 5
+num_shadow_student: 3
+significance_level: 0.01
+trajectory_size: 1.0
+random_seed: 0
+critic_model_tag: ckpt_200.pt
+student_model_tag: model_50000.pt
+num_of_audited_episode: 5
+
+env_name: 
+  - LunarLanderContinuous-v2
+all_student_model_type: 
+  - BC
+
+## default experimental settings in the paper's evaluation
+# datasets_and_models_dir: datasets_and_models_set1
+# number_teacher_model: 5
+# teacher_train_times: 1000000
+# number_student_model: 30
+# num_shadow_student: 15
+# significance_level: 0.01
+# trajectory_size: 1.0
+# random_seed: 0
+# critic_model_tag: ckpt_200.pt
+# student_model_tag: model_50000.pt
+# num_of_audited_episode: 50
+
+# env_name: 
+#   - LunarLanderContinuous-v2
+#   - BipedalWalker-v3
+#   - Ant-v2
+# all_student_model_type: 
+#   - BC
+#   - BCQ
+#   - IQL
+#   - TD3PlusBC

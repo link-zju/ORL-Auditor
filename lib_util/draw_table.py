@@ -30,7 +30,6 @@ def draw_table(env_name_list, suspect_model_type_list, metric_list, json_data_di
         for suspect_model_type in suspect_model_type_list:
             results[env_name][suspect_model_type] = {}
             json_file_path_list = glob.glob(f'{json_data_dir}/*/*envname_{env_name}-*sustype_{suspect_model_type}-*numstu_{num_shadow_student}-*trajsize_{trajectory_size}-*signlevel_{significance_level}-*.json', recursive=True)
-            # import pdb; pdb.set_trace()
             assert 1 == len(json_file_path_list), print(json_file_path_list)
             json_file_path = json_file_path_list[0]
             with open(json_file_path, 'r') as j:
@@ -68,7 +67,10 @@ def draw_table(env_name_list, suspect_model_type_list, metric_list, json_data_di
             
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("")
-
+    
+    parser.add_argument("--env_name_list", type=str, default="LunarLanderContinuous-v2 BipedalWalker-v3 Ant-v2")
+    parser.add_argument("--suspect_model_type_list", type=str, default="BC BCQ IQL TD3PlusBC")
+    
     parser.add_argument("--json_data_dir", type=str, default="")
     parser.add_argument("--num_shadow_student", type=int, default=15)
     parser.add_argument("--significance_level", type=float, default=0.01)
@@ -77,9 +79,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(args)
     
-    env_name_list = ["LunarLanderContinuous-v2", "BipedalWalker-v3", "Ant-v2"]
-    suspect_model_type_list = ["BC", "BCQ", "IQL", "TD3PlusBC"]
     metric_list = ["l1_distance", "l2_distance", "cos_distance", "wasserstein_distance"]
+    
+    env_name_list = list(args.env_name_list.split("\n"))
+    suspect_model_type_list = list(args.suspect_model_type_list.split("\n"))
     
     draw_table(env_name_list, suspect_model_type_list, metric_list, args.json_data_dir, args.num_shadow_student, args.significance_level, args.trajectory_size)
     

@@ -38,6 +38,7 @@ class TeacherModelTrain():
         model_name = f"sb3_sac_{self.train_env}_{self.random_seed}_{self.teacher_train_times}.zip"
         
         if not os.path.exists(self.teacher_save_path):
+            print(self.teacher_save_path)
             os.makedirs(self.teacher_save_path)
         model_save_path = os.path.join(self.teacher_save_path, model_name)
         sb3sac.save(model_save_path)
@@ -53,5 +54,6 @@ class TeacherModelTrain():
         
         if not os.path.exists(self.teacher_save_path):
             os.makedirs(self.teacher_save_path)
+            print(self.teacher_save_path)
         model_save_path = os.path.join(self.teacher_save_path, model_name)
         sb3ppo.save(model_save_path)

@@ -18,38 +18,34 @@ select_GPU()
     done
 }
 
-## Check if the previous tasks is finished
-forward_task_complete()
-{
-    ongoing_process=`ps aux|grep processname|grep "main.py"|wc -l`
-    while [ $ongoing_process -gt 0 ]
-    do 
-        sleep 5
-        echo "Waiting for the previous task to finish"
-        ongoing_process=`ps aux|grep processname|grep "main.py"|wc -l`
-    done
-
-}
-
-
-
 ## name transfer
 declare -A env_name_to_expt_dataset_name
 env_name_to_expt_dataset_name=([LunarLanderContinuous-v2]=sac_lunarlander \
                                [BipedalWalker-v3]=sac_bipedalwalker \
                                [Ant-v2]=sac_ant)
 
-## default settings in the paper's evaluation
-num_shadow_student=15
-significance_level=0.01
-trajectory_size=1.0
-random_seed=0
+
+yaml_file="experimental_settings.yml"
+
+datasets_and_models_dir=$(yq -r '.datasets_and_models_dir' "$yaml_file")
+number_teacher_model=$(yq -r '.number_teacher_model' "$yaml_file")
+teacher_train_times=$(yq -r '.teacher_train_times' "$yaml_file")
+number_student_model=$(yq -r '.number_student_model' "$yaml_file")
+env_name=$(yq -r '.env_name[]' "$yaml_file")
+all_student_model_type=$(yq -r '.all_student_model_type[]' "$yaml_file")
+
+num_shadow_student=$(yq -r '.num_shadow_student' "$yaml_file")
+significance_level=$(yq -r '.significance_level' "$yaml_file")
+trajectory_size=$(yq -r '.trajectory_size' "$yaml_file")
+random_seed=$(yq -r '.random_seed' "$yaml_file")
+critic_model_tag=$(yq -r '.critic_model_tag' "$yaml_file")
+student_model_tag=$(yq -r '.student_model_tag' "$yaml_file")
+num_of_audited_episode=$(yq -r '.num_of_audited_episode' "$yaml_file")
 
 
-datasets_and_models_dir=datasets_and_models_set1
-
-env_name=("LunarLanderContinuous-v2" "BipedalWalker-v3" "Ant-v2")
-all_student_model_type=("BC" "BCQ" "IQL" "TD3PlusBC")
+if [ ! -d "result_save" ]; then
+  mkdir "result_save"
+fi
 
 for task_name in ${env_name[@]};
 do
@@ -59,12 +55,6 @@ do
     echo $task_name $student_model_type
     mkdir -p "./$datasets_and_models_dir/logs/${env_name_to_expt_dataset_name[$task_name]}/data_audit/$student_model_type"
     touch ./$datasets_and_models_dir/logs/${env_name_to_expt_dataset_name[$task_name]}/data_audit/$student_model_type/$random_seed.txt
-    python main.py --datasets_and_models_dir $datasets_and_models_dir --env_name $task_name --which_experiment audit_dataset  --teacher_buffer_save_path ./$datasets_and_models_dir/${env_name_to_expt_dataset_name[$task_name]}/teacher_buffer/baseline --critic_model_tag ckpt_200.pt --student_model_tag model_50000.pt --student_agent_type  $student_model_type  --num_of_audited_episode 50 --num_shadow_student $num_shadow_student --significance_level $significance_level  --trajectory_size $trajectory_size --random_seed $random_seed --cuda $gpu_id > ./$datasets_and_models_dir/logs/${env_name_to_expt_dataset_name[$task_name]}/data_audit/$student_model_type/$random_seed.txt &
+    python main.py --datasets_and_models_dir $datasets_and_models_dir --env_name $task_name --which_experiment audit_dataset  --teacher_buffer_save_path ./$datasets_and_models_dir/${env_name_to_expt_dataset_name[$task_name]}/teacher_buffer/baseline --critic_model_tag $critic_model_tag --student_model_tag $student_model_tag --student_agent_type  $student_model_type  --num_of_audited_episode $num_of_audited_episode --num_shadow_student $num_shadow_student --significance_level $significance_level  --trajectory_size $trajectory_size --random_seed $random_seed --cuda $gpu_id > ./$datasets_and_models_dir/logs/${env_name_to_expt_dataset_name[$task_name]}/data_audit/$student_model_type/$random_seed.txt &
     done
 done
-
-
-forward_task_complete
-## put the results into a table
-python ./lib_util/draw_table.py --json_data_dir result_save/$datasets_and_models_dir --num_shadow_student $num_shadow_student --significance_level $significance_level --trajectory_size $trajectory_size
-

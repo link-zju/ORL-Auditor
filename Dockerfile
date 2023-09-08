@@ -3,15 +3,18 @@
 FROM nvidia/cuda:11.2.2-base-ubuntu20.04
 WORKDIR /workspace
 COPY requirements.txt .
-RUN apt update
-RUN apt -y install python3.8
-RUN apt -y install python3-pip
+RUN apt-get update
+RUN apt-get -y install wget
+RUN apt-get -y install python3.8
+RUN apt-get -y install python3-pip
 RUN python3 -m pip install --upgrade pip
-RUN apt -y install python3.8-venv
+RUN apt-get -y install python3.8-venv
+RUN apt-get -y install jq
+RUN apt-get -y install libghc-yaml-dev
 
 ENV TZ=Asia/Dubai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-RUN apt -y install python3.8-tk
+RUN apt-get -y install python3.8-tk
 
 ENV VIRTUAL_ENV=/opt/venv
 RUN python3 -m venv $VIRTUAL_ENV
